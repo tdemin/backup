@@ -40,7 +40,7 @@ add_to_archive() {
 }
 
 clean_up() {
-    /usr/bin/env find "${__BACKUP_DIR}" -ctime +${__BACKUP_AGE} -delete || \
+    /usr/bin/env find "${1}" -ctime +${__BACKUP_AGE} -delete || \
         die "Cleanup failed!"
 }
 
@@ -134,4 +134,9 @@ case ${1} in
         ;;
 esac
 
-clean_up
+echo "Cleaning up..."
+# Run cleanup on every backup directory.
+for i in ${__BACKUP_DIR} ${__BACKUP_DIR_CONFIGS} ${__BACKUP_DIR_DOCKER} \
+    ${__BACKUP_DIR_POSTGRES}; do
+    [[ ! -z $i ]] && clean_up $i
+done
