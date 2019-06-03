@@ -18,9 +18,14 @@ source ${__CONFIG_FILE}
 # Set the date to be inserted to tarball names.
 __DATE="$(date +%Y-%m-%d-%H-%M)"
 
+# Wrapper around `mkdir -p`.
+mkdir_p() {
+    [[ ! -d "${1}" ]] && mkdir -p "${1}" && \
+        echo "Created ${1} for you."
+}
+
 # Create the backup directory if it does not exist yet.
-[[ ! -d ${__BACKUP_DIR} ]] && mkdir -p ${__BACKUP_DIR} && \
-    echo "Created ${__BACKUP_DIR} for you."
+mkdir_p ${__BACKUP_DIR}
 
 # Creates an empty tar archive. Accepts a single parameter, the filename.
 empty_archive() {
@@ -41,7 +46,11 @@ clean_up() {
 
 backup_docker() {
     echo "Running a Docker volumes backup..."
-    __FILENAME="${__BACKUP_DIR}/${__DATE}-docker${__BACKUP_EXT}"
+    if [[ -z ${__BACKUP_DIR_DOCKER} ]]; then
+        __BACKUP_DIR_DOCKER=${__BACKUP_DIR}
+    fi
+    mkdir_p ${__BACKUP_DIR_DOCKER}
+    __FILENAME="${__BACKUP_DIR_DOCKER}/${__DATE}-docker${__BACKUP_EXT}"
     # Check the presence of the Docker directory.
     [[ -d /var/lib/docker ]] || die "Docker is likely to not be installed."
     empty_archive ${__FILENAME}
@@ -50,7 +59,11 @@ backup_docker() {
 
 backup_postgres() {
     echo "Running a PostgreSQL databases backup..."
-    __FILENAME="${__BACKUP_DIR}/${__DATE}-postgres${__BACKUP_EXT}"
+    if [[ -z ${__BACKUP_DIR_POSTGRES} ]]; then
+        __BACKUP_DIR_POSTGRES=${__BACKUP_DIR}
+    fi
+    mkdir_p ${__BACKUP_DIR_POSTGRES}
+    __FILENAME="${__BACKUP_DIR_POSTGRES}/${__DATE}-postgres${__BACKUP_EXT}"
     # The databases need to be listed in a special variable.
     [[ -z ${__BACKUP_DATABASES} ]] && die "The databases list is not specified."
     for database in "${__BACKUP_DATABASES[@]}"; do
@@ -64,7 +77,11 @@ backup_postgres() {
 
 backup_configs() {
     echo "Running config files backups..."
-    __FILENAME="${__BACKUP_DIR}/${__DATE}-configs${__BACKUP_EXT}"
+    if [[ -z ${__BACKUP_DIR_CONFIGS} ]]; then
+        __BACKUP_DIR_CONFIGS=${__BACKUP_DIR}
+    fi
+    mkdir_p ${__BACKUP_DIR_CONFIGS}
+    __FILENAME="${__BACKUP_DIR_CONFIGS}/${__DATE}-configs${__BACKUP_EXT}"
     # The files to be saved need to be listed in a special variable.
     [[ -z ${__BACKUP_FILES} ]] && \
         die "The files to be backed up are not specified."
@@ -100,5 +117,7 @@ else
     backup_configs
     backup_docker
     # backup_postgres
+    # This is commented out by default, as PostgreSQL backups might be
+    # preferable to run under a separate user.
 fi
 clean_up
