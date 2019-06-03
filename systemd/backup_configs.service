@@ -1,0 +1,11 @@
+[Unit]
+Description=Run backups on service configurations and Docker volumes
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/backup.sh -c -d
+User=root
+WorkingDirectory=/tmp
+
+[Install]
+WantedBy=default.target

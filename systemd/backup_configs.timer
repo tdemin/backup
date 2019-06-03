@@ -1,0 +1,8 @@
+[Unit]
+Description=Run backups on service configurations and Docker volumes
+
+[Timer]
+OnCalendar=*-*-* 4:00:00
+
+[Install]
+WantedBy=timers.target

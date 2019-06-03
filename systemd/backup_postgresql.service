@@ -1,0 +1,12 @@
+[Unit]
+Description=Run backups on PostgreSQL databases
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/backup.sh -p
+User=postgres
+Group=postgres
+WorkingDirectory=/tmp
+
+[Install]
+WantedBy=default.target
