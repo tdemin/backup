@@ -34,3 +34,10 @@ The configuration file is located at `/etc/backups.conf`. It has to be a
 valid bash script, as it's sourced at the program start.
 
 For the available options see [the example config file](backups.conf.example).
+
+##### Caveats
+
+This script is not supposed to send backups to S3/Backblaze B2/etc. It assumes
+the tarballs are then copied to some other location with other tools (this may
+be `rsync` or whatever you like). The author themselves simply uses `pscp` for
+that.
