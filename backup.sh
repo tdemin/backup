@@ -93,8 +93,8 @@ backup_configs() {
 # Check if the first command-line flag is `-a` and run all of the options if
 # applicable, check for the other flags otherwise.
 if [[ "${1}" != "-a" ]]; then
-    for arg in "$*"; do
-        case $arg in
+    while [[ ! -z ${1} ]]; do
+        case ${1} in
             "-d" | "--docker")
                 backup_docker
                 ;;
@@ -107,11 +107,8 @@ if [[ "${1}" != "-a" ]]; then
             "-a")
                 die "-a cannot be specified after any other flags."
                 ;;
-            "$0")
-                # This is only hit when listing through the basename.
-                # Do nothing.
-                ;;
         esac
+        shift
     done
 else
     backup_configs
