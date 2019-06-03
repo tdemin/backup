@@ -30,7 +30,7 @@ empty_archive() {
 }
 # Accepts two parameters, the archive filename and the file to be added.
 add_to_archive() {
-    /usr/bin/env tar --xattrs --append -pvf 2>/dev/null "${1}" "${2}" || \
+    /usr/bin/env tar --xattrs --append -pf 2>/dev/null "${1}" "${2}" || \
         die "Adding ${2} to ${1} failed!"
 }
 
