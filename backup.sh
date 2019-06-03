@@ -90,31 +90,48 @@ backup_configs() {
     done
 }
 
-# Check if the first command-line flag is `-a` and run all of the options if
-# applicable, check for the other flags otherwise.
-if [[ "${1}" != "-a" ]]; then
-    while [[ ! -z ${1} ]]; do
-        case ${1} in
-            "-d" | "--docker")
-                backup_docker
-                ;;
-            "-p" | "--postgres")
-                backup_postgres
-                ;;
-            "-c" | "--configs")
-                backup_configs
-                ;;
-            "-a")
-                die "-a cannot be specified after any other flags."
-                ;;
-        esac
-        shift
-    done
-else
-    backup_configs
-    backup_docker
-    # backup_postgres
-    # This is commented out by default, as PostgreSQL backups might be
-    # preferable to run under a separate user.
-fi
+print_help() {
+    cat <<EOF
+backup.sh: a simple backup script.
+
+Usage:
+    backup.sh [flags]
+
+Options:
+-a | --all: run the default set of backups (configs and Docker as of now)
+-p | --postgres: run the backups on PostgreSQL databases
+-d | --docker: run the backups on Docker volumes
+-c | --configs: run the backups on the files specified in /etc/backups.conf
+EOF
+}
+
+case ${1} in
+    "-a" | "--all")
+        backup_configs
+        backup_docker
+        # backup_postgres
+        # This is commented out by default, as PostgreSQL backups might be
+        # preferable to run under a separate user.
+        ;;
+    "-h" | "--help")
+        print_help
+        ;;
+    *)
+        while [[ ! -z ${1} ]]; do
+            case ${1} in
+                "-d" | "--docker")
+                    backup_docker
+                    ;;
+                "-p" | "--postgres")
+                    backup_postgres
+                    ;;
+                "-c" | "--configs")
+                    backup_configs
+                    ;;
+            esac
+            shift
+        done
+        ;;
+esac
+
 clean_up
