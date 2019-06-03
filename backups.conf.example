@@ -1,0 +1,25 @@
+# This file is a shell script that is sourced at the start of the backup script.
+# Feel free to hack on it as you like.
+
+# Only the first parameter is required.
+__BACKUP_DIR=/tmp/backups
+# __BACKUP_DIR_POSTGRES=/tmp/postgres_backups
+# __BACKUP_DIR_DOCKER=/tmp/docker_backups
+# __BACKUP_DIR_CONFIGS=/tmp/configs_dir
+
+# The default compression format. Can be anything tar(1) recognizes. Optional.
+__BACKUP_EXT=".tar.gz"
+# Purge the backups older than this value in days (find -ctime +DAYS). Optional.
+__BACKUP_AGE=2
+
+# A bash array containing the files/directories you want to save.
+# Required (if a -c or an -a backup is run).
+__BACKUP_FILES=(
+    /etc/backups.conf
+    /etc/postgresql
+)
+# A list of databases you want to back up while the -p backup is running.
+# Required (if you run the script with -p).
+__BACKUP_DATABASES=(
+    template1
+)
