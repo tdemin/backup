@@ -102,6 +102,7 @@ Options:
 -p | --postgres: run the backups on PostgreSQL databases
 -d | --docker: run the backups on Docker volumes
 -c | --configs: run the backups on the files specified in /etc/backups.conf
+--no-cleanup: don't cleanup after the backup has finished
 EOF
 }
 
@@ -115,6 +116,7 @@ case ${1} in
         ;;
     "-h" | "--help")
         print_help
+        __BACKUP_NO_CLEANUP=1 # prevent cleanup on displaying help
         ;;
     *)
         while [[ ! -z ${1} ]]; do
@@ -128,15 +130,20 @@ case ${1} in
                 "-c" | "--configs")
                     backup_configs
                     ;;
+                "--no-cleanup")
+                    __BACKUP_NO_CLEANUP=1
+                    ;;
             esac
             shift
         done
         ;;
 esac
 
-echo "Cleaning up..."
-# Run cleanup on every backup directory.
-for i in ${__BACKUP_DIR} ${__BACKUP_DIR_CONFIGS} ${__BACKUP_DIR_DOCKER} \
-    ${__BACKUP_DIR_POSTGRES}; do
-    [[ ! -z $i ]] && clean_up $i
-done
+if [[ -z ${__BACKUP_NO_CLEANUP} ]]; then
+    echo "Cleaning up..."
+    # Run cleanup on every backup directory.
+    for i in ${__BACKUP_DIR} ${__BACKUP_DIR_CONFIGS} ${__BACKUP_DIR_DOCKER} \
+        ${__BACKUP_DIR_POSTGRES}; do
+        [[ ! -z $i ]] && clean_up $i
+    done
+fi

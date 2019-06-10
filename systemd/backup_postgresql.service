@@ -3,7 +3,7 @@ Description=Run backups on PostgreSQL databases
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/backup.sh -p
+ExecStart=/usr/local/bin/backup.sh -p --no-cleanup
 User=postgres
 Group=postgres
 WorkingDirectory=/tmp

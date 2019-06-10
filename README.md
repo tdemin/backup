@@ -27,6 +27,7 @@ It comes with example systemd units/timers made to do just that.
     -p | --postgres: run the backups on PostgreSQL databases
     -d | --docker: run the backups on Docker volumes
     -c | --configs: run the backups on the files specified in /etc/backups.conf
+    --no-cleanup: don't cleanup after the backup has finished
 
 ##### Configuration options
 
