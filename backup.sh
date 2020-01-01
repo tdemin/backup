@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-__CONFIG_FILE="/etc/backups.conf"
+CONFIG_FILE="/etc/backups.conf"
 
 # A simple wrapper for a Gentoo ebuild-like `die`.
 die() {
@@ -9,14 +9,14 @@ die() {
 }
 
 # Source the configuration file.
-[[ -f ${__CONFIG_FILE} ]] || die "Cannot find ${__CONFIG_FILE}. Exiting."
-source ${__CONFIG_FILE}
+[[ -f ${CONFIG_FILE} ]] || die "Cannot find ${CONFIG_FILE}. Exiting."
+source ${CONFIG_FILE}
 # Check the required / optional variables.
-[[ -z ${__BACKUP_DIR} ]] && die "__BACKUP_DIR is not set."
-[[ -z ${__BACKUP_EXT} ]] && __BACKUP_EXT=".tar.gz" # default compression format
-[[ -z ${__BACKUP_AGE} ]] && __BACKUP_AGE=2 # 2 day-old backups stored by default
+[[ -z ${BACKUP_DIR} ]] && die "BACKUP_DIR is not set."
+[[ -z ${BACKUP_EXT} ]] && BACKUP_EXT=".tar.gz" # default compression format
+[[ -z ${BACKUP_AGE} ]] && BACKUP_AGE=2 # 2 day-old backups stored by default
 # Set the date to be inserted to tarball names.
-__DATE="$(date +%Y-%m-%d-%H-%M)"
+BACKUP_DATE="$(date +%Y-%m-%d-%H-%M)"
 
 # Wrapper around `mkdir -p`.
 mkdir_p() {
@@ -25,7 +25,7 @@ mkdir_p() {
 }
 
 # Create the backup directory if it does not exist yet.
-mkdir_p ${__BACKUP_DIR}
+mkdir_p ${BACKUP_DIR}
 
 # Creates an empty tar archive. Accepts a single parameter, the filename.
 empty_archive() {
@@ -40,53 +40,53 @@ add_to_archive() {
 }
 
 clean_up() {
-    /usr/bin/env find "${1}" -ctime +${__BACKUP_AGE} -delete || \
+    /usr/bin/env find "${1}" -ctime +${BACKUP_AGE} -delete || \
         die "Cleanup failed!"
 }
 
 backup_docker() {
     echo "Running a Docker volumes backup..."
-    if [[ -z ${__BACKUP_DIR_DOCKER} ]]; then
-        __BACKUP_DIR_DOCKER=${__BACKUP_DIR}
+    if [[ -z ${BACKUP_DIR_DOCKER} ]]; then
+        BACKUP_DIR_DOCKER=${BACKUP_DIR}
     fi
-    mkdir_p ${__BACKUP_DIR_DOCKER}
-    __FILENAME="${__BACKUP_DIR_DOCKER}/${__DATE}-docker${__BACKUP_EXT}"
+    mkdir_p ${BACKUP_DIR_DOCKER}
+    filename="${BACKUP_DIR_DOCKER}/${BACKUP_DATE}-docker${BACKUP_EXT}"
     # Check the presence of the Docker directory.
     [[ -d /var/lib/docker ]] || die "Docker is likely to not be installed."
-    empty_archive ${__FILENAME}
-    add_to_archive ${__FILENAME} /var/lib/docker/volumes
+    empty_archive ${filename}
+    add_to_archive ${filename} /var/lib/docker/volumes
 }
 
 backup_postgres() {
     echo "Running a PostgreSQL databases backup..."
-    if [[ -z ${__BACKUP_DIR_POSTGRES} ]]; then
-        __BACKUP_DIR_POSTGRES=${__BACKUP_DIR}
+    if [[ -z ${BACKUP_DIR_POSTGRES} ]]; then
+        BACKUP_DIR_POSTGRES=${BACKUP_DIR}
     fi
-    mkdir_p ${__BACKUP_DIR_POSTGRES}
-    __FILENAME="${__BACKUP_DIR_POSTGRES}/${__DATE}-postgres${__BACKUP_EXT}"
+    mkdir_p ${BACKUP_DIR_POSTGRES}
+    filename="${BACKUP_DIR_POSTGRES}/${BACKUP_DATE}-postgres${BACKUP_EXT}"
     # The databases need to be listed in a special variable.
-    [[ -z ${__BACKUP_DATABASES} ]] && die "The databases list is not specified."
-    for database in "${__BACKUP_DATABASES[@]}"; do
-        __DUMP_NAME="${__FILENAME}-$database"
-        pg_dump -Fc $database > ${__DUMP_NAME} || \
+    [[ -z ${BACKUP_DATABASES} ]] && die "The databases list is not specified."
+    for database in "${BACKUP_DATABASES[@]}"; do
+        dump_name="${filename}-${database}"
+        pg_dump -Fc $database > ${dump_name} || \
             die "Failed backing up database $database."
-        add_to_archive ${__FILENAME} ${__DUMP_NAME}
-        rm ${__DUMP_NAME}
+        add_to_archive ${filename} ${dump_name}
+        rm ${dump_name}
     done
 }
 
 backup_configs() {
     echo "Running config files backups..."
-    if [[ -z ${__BACKUP_DIR_CONFIGS} ]]; then
-        __BACKUP_DIR_CONFIGS=${__BACKUP_DIR}
+    if [[ -z ${BACKUP_DIR_CONFIGS} ]]; then
+        BACKUP_DIR_CONFIGS=${BACKUP_DIR}
     fi
-    mkdir_p ${__BACKUP_DIR_CONFIGS}
-    __FILENAME="${__BACKUP_DIR_CONFIGS}/${__DATE}-configs${__BACKUP_EXT}"
+    mkdir_p ${BACKUP_DIR_CONFIGS}
+    filename="${BACKUP_DIR_CONFIGS}/${BACKUP_DATE}-configs${BACKUP_EXT}"
     # The files to be saved need to be listed in a special variable.
-    [[ -z ${__BACKUP_FILES} ]] && \
+    [[ -z ${BACKUP_FILES} ]] && \
         die "The files to be backed up are not specified."
-    for file in "${__BACKUP_FILES[@]}"; do
-        add_to_archive ${__FILENAME} $file
+    for file in "${BACKUP_FILES[@]}"; do
+        add_to_archive ${filename} $file
     done
 }
 
@@ -116,7 +116,7 @@ case ${1} in
         ;;
     "-h" | "--help")
         print_help
-        __BACKUP_NO_CLEANUP=1 # prevent cleanup on displaying help
+        BACKUP_NO_CLEANUP=1 # prevent cleanup on displaying help
         ;;
     *)
         while [[ ! -z ${1} ]]; do
@@ -131,7 +131,7 @@ case ${1} in
                     backup_configs
                     ;;
                 "--no-cleanup")
-                    __BACKUP_NO_CLEANUP=1
+                    BACKUP_NO_CLEANUP=1
                     ;;
             esac
             shift
@@ -139,11 +139,11 @@ case ${1} in
         ;;
 esac
 
-if [[ -z ${__BACKUP_NO_CLEANUP} ]]; then
+if [[ -z ${BACKUP_NO_CLEANUP} ]]; then
     echo "Cleaning up..."
     # Run cleanup on every backup directory.
-    for i in ${__BACKUP_DIR} ${__BACKUP_DIR_CONFIGS} ${__BACKUP_DIR_DOCKER} \
-        ${__BACKUP_DIR_POSTGRES}; do
+    for i in ${BACKUP_DIR} ${BACKUP_DIR_CONFIGS} ${BACKUP_DIR_DOCKER} \
+        ${BACKUP_DIR_POSTGRES}; do
         [[ ! -z $i ]] && clean_up $i
     done
 fi
